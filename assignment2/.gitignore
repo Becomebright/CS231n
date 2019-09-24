@@ -1,0 +1,10 @@
+*.swp
+*.pyc
+.env/*
+*.ipynb_checkpoints/*
+
+# gitignore the built release.
+assignment3/*
+
+cs231n/__pycache__/
+cs231n/datasets/*

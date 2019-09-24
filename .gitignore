@@ -3,3 +3,4 @@
 .env/*
 .idea/*
 solutions/
+.ipynb_checkpoints/*
