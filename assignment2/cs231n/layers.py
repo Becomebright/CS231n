@@ -27,7 +27,7 @@ def affine_forward(x, w, b):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = x.reshape(x.shape[0], w.shape[0]).dot(w) + b
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -60,7 +60,9 @@ def affine_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dx = dout.dot(w.T).reshape(x.shape)
+    dw = x.reshape(x.shape[0], w.shape[0]).T.dot(dout)
+    db = np.sum(dout, axis=0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -86,7 +88,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = np.maximum(0, x)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -113,7 +115,8 @@ def relu_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dout[x <= 0] = 0
+    dx = dout
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -763,6 +766,7 @@ def svm_loss(x, y):
     - loss: Scalar giving the loss
     - dx: Gradient of the loss with respect to x
     """
+
     N = x.shape[0]
     correct_class_scores = x[np.arange(N), y]
     margins = np.maximum(0, x - correct_class_scores[:, np.newaxis] + 1.0)
@@ -773,6 +777,7 @@ def svm_loss(x, y):
     dx[margins > 0] = 1
     dx[np.arange(N), y] -= num_pos
     dx /= N
+
     return loss, dx
 
 
@@ -790,13 +795,25 @@ def softmax_loss(x, y):
     - loss: Scalar giving the loss
     - dx: Gradient of the loss with respect to x
     """
-    shifted_logits = x - np.max(x, axis=1, keepdims=True)
-    Z = np.sum(np.exp(shifted_logits), axis=1, keepdims=True)
-    log_probs = shifted_logits - np.log(Z)
-    probs = np.exp(log_probs)
+
+    # shifted_logits = x - np.max(x, axis=1, keepdims=True)
+    # Z = np.sum(np.exp(shifted_logits), axis=1, keepdims=True)
+    # log_probs = shifted_logits - np.log(Z)
+    # probs = np.exp(log_probs)
+    # N = x.shape[0]
+    # loss = -np.sum(log_probs[np.arange(N), y]) / N
+    # dx = probs.copy()
+    # dx[np.arange(N), y] -= 1
+    # dx /= N
+
     N = x.shape[0]
+    x = x - np.max(x, axis=1, keepdims=True)
+    sum_exp = np.sum(np.exp(x), axis=1, keepdims=True)
+    log_probs = x - np.log(sum_exp)
+    probs = np.exp(log_probs)
     loss = -np.sum(log_probs[np.arange(N), y]) / N
-    dx = probs.copy()
+    dx = probs
     dx[np.arange(N), y] -= 1
     dx /= N
+
     return loss, dx

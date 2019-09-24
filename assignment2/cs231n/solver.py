@@ -17,7 +17,7 @@ class Solver(object):
     models. The Solver performs stochastic gradient descent using different
     update rules defined in optim.py.
 
-    The solver accepts both training and validataion data and labels so it can
+    The solver accepts both training and validation data and labels so it can
     periodically check classification accuracy on both training and validation
     data to watch out for overfitting.
 
@@ -146,7 +146,6 @@ class Solver(object):
 
         self._reset()
 
-
     def _reset(self):
         """
         Set up some book-keeping variables for optimization. Don't call this
@@ -165,7 +164,6 @@ class Solver(object):
         for p in self.model.params:
             d = {k: v for k, v in self.optim_config.items()}
             self.optim_configs[p] = d
-
 
     def _step(self):
         """
@@ -190,9 +188,9 @@ class Solver(object):
             self.model.params[p] = next_w
             self.optim_configs[p] = next_config
 
-
     def _save_checkpoint(self):
-        if self.checkpoint_name is None: return
+        if self.checkpoint_name is None:
+            return
         checkpoint = {
           'model': self.model,
           'update_rule': self.update_rule,
@@ -211,7 +209,6 @@ class Solver(object):
             print('Saving checkpoint to "%s"' % filename)
         with open(filename, 'wb') as f:
             pickle.dump(checkpoint, f)
-
 
     def check_accuracy(self, X, y, num_samples=None, batch_size=100):
         """
@@ -252,7 +249,6 @@ class Solver(object):
         acc = np.mean(y_pred == y)
 
         return acc
-
 
     def train(self):
         """
