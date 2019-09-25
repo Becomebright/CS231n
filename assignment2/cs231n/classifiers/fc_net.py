@@ -309,18 +309,20 @@ class FullyConnectedNet(object):
 
         loss, dscores = softmax_loss(scores, y)
         for i in range(1, self.num_layers + 1):
-            loss += 0.5 * np.sum(self.params['W' + str(i)] ** 2)
+            loss += 0.5 * self.reg * np.sum(self.params['W' + str(i)] ** 2)
 
         for i in range(self.num_layers, 0, -1):
             if i == self.num_layers:
-                dscores, grads['W' + str(i)], grads['b' + str(i)] = affine_backward(dscores, caches[i])
+                dscores, dW, db = affine_backward(dscores, caches[i])
             else:
                 if self.normalization == 'batchnorm':
-                    dscores, grads['W' + str(i)], grads['b' + str(i)], grads['gamma' + str(i)], \
-                        grads['beta' + str(i)] = affine_bn_relu_backward(dscores, caches[i])
+                    dscores, dW, db, dgamma, dbeta = affine_bn_relu_backward(dscores, caches[i])
+                    grads['gamma' + str(i)] = dgamma
+                    grads['beta' + str(i)] = dbeta
                 else:
-                    dscores, grads['W' + str(i)], grads['b' + str(i)] = affine_relu_backward(dscores, caches[i])
-            grads['W' + str(i)] += self.params['W' + str(i)]
+                    dscores, dW, db = affine_relu_backward(dscores, caches[i])
+            grads['W' + str(i)] = dW + self.reg * self.params['W' + str(i)]
+            grads['b' + str(i)] = db
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -331,16 +333,16 @@ class FullyConnectedNet(object):
 
 
 def affine_bn_relu_forward(x, w, b, gamma, beta, bn_param):
-    a, fc_cache = affine_forward(x, w, b)
-    a, bn_cache = batchnorm_forward(a, gamma, beta, bn_param)
-    out, relu_cache = relu_forward(a)
+    out_fc, fc_cache = affine_forward(x, w, b)
+    out_bn, bn_cache = batchnorm_forward(out_fc, gamma, beta, bn_param)
+    out, relu_cache = relu_forward(out_bn)
     cache = (fc_cache, bn_cache, relu_cache)
     return out, cache
 
 
 def affine_bn_relu_backward(dout, cache):
     fc_cache, bn_cache, relu_cache = cache
-    da = relu_backward(dout, relu_cache)
-    da, dgamma, dbeta = batchnorm_backward_alt(da, bn_cache)
-    dx, dw, db = affine_backward(da, fc_cache)
+    dre = relu_backward(dout, relu_cache)
+    dbn, dgamma, dbeta = batchnorm_backward_alt(dre, bn_cache)
+    dx, dw, db = affine_backward(dbn, fc_cache)
     return dx, dw, db, dgamma, dbeta
