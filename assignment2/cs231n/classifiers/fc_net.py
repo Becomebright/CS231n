@@ -187,7 +187,19 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        for i in range(1, self.num_layers+1):
+            if i == 1:
+                w_size = (input_dim, hidden_dims[0])
+                b_size = hidden_dims[0]
+
+            elif i == self.num_layers:
+                w_size = (hidden_dims[-1], num_classes)
+                b_size = num_classes
+            else:
+                w_size = (hidden_dims[i-2], hidden_dims[i-1])
+                b_size = hidden_dims[i-1]
+            self.params['W' + str(i)] = np.random.normal(scale=weight_scale, size=w_size)
+            self.params['b' + str(i)] = np.zeros(b_size)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -217,7 +229,6 @@ class FullyConnectedNet(object):
         # Cast all parameters to the correct datatype
         for k, v in self.params.items():
             self.params[k] = v.astype(dtype)
-
 
     def loss(self, X, y=None):
         """
@@ -250,7 +261,15 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        caches = [0] * (self.num_layers+1)
+        scores = X.copy()
+        for i in range(1, self.num_layers+1):
+            W = self.params['W' + str(i)]
+            b = self.params['b' + str(i)]
+            if i == self.num_layers:
+                scores, caches[i] = affine_forward(scores, W, b)
+            else:
+                scores, caches[i] = affine_relu_forward(scores, W, b)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -277,7 +296,16 @@ class FullyConnectedNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, dscores = softmax_loss(scores, y)
+        for i in range(1, self.num_layers+1):
+            loss += 0.5 * np.sum(self.params['W'+str(i)] ** 2)
+
+        for i in range(self.num_layers, 0, -1):
+            if i == self.num_layers:
+                dscores, grads['W'+str(i)], grads['b'+str(i)] = affine_backward(dscores, caches[i])
+            else:
+                dscores, grads['W'+str(i)], grads['b'+str(i)] = affine_relu_backward(dscores, caches[i])
+            grads['W'+str(i)] += self.params['W'+str(i)]
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
