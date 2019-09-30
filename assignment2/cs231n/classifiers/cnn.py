@@ -55,7 +55,14 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        self.params['W1'] = np.random.normal(size=(num_filters, input_dim[0], filter_size, filter_size),
+                                             scale=weight_scale)
+        self.params['b1'] = np.zeros(num_filters)
+        self.params['W2'] = np.random.normal(size=(num_filters * input_dim[1]//2 * input_dim[2]//2, hidden_dim),
+                                             scale=weight_scale)
+        self.params['b2'] = np.zeros(hidden_dim)
+        self.params['W3'] = np.random.normal(size=(hidden_dim, num_classes), scale=weight_scale)
+        self.params['b3'] = np.zeros(num_classes)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -95,7 +102,9 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        scores, conv_cache = conv_relu_pool_forward(X, W1, b1, conv_param, pool_param)
+        scores, fc_cache1 = affine_relu_forward(scores, W2, b2)
+        scores, fc_cache2 = affine_forward(scores, W3, b3)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -118,7 +127,10 @@ class ThreeLayerConvNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, dscores = softmax_loss(scores, y)
+        dscores, grads['W3'], grads['b3'] = affine_backward(dscores, fc_cache2)
+        dscores, grads['W2'], grads['b2'] = affine_relu_backward(dscores, fc_cache1)
+        _, grads['W1'], grads['b1'] = conv_relu_pool_backward(dscores, conv_cache)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
