@@ -4,3 +4,5 @@
 .idea/*
 solutions/
 .ipynb_checkpoints/*
+.DS_Store
+test.py
