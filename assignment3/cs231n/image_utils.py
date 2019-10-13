@@ -3,7 +3,6 @@ from future import standard_library
 standard_library.install_aliases()
 from builtins import range
 import urllib.request, urllib.error, urllib.parse, os, tempfile
-
 import numpy as np
 from scipy.misc import imread, imresize
 

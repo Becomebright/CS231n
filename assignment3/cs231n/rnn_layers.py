@@ -2,7 +2,6 @@ from __future__ import print_function, division
 from builtins import range
 import numpy as np
 
-
 """
 This file defines layer types that are commonly used for recurrent neural
 networks.
@@ -36,7 +35,8 @@ def rnn_step_forward(x, prev_h, Wx, Wh, b):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    next_h = np.tanh(x.dot(Wx) + prev_h.dot(Wh) + b)
+    cache = (next_h, x, prev_h, Wx, Wh)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -69,7 +69,13 @@ def rnn_step_backward(dnext_h, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    next_h, x, prev_h, Wx, Wh = cache
+    dtanh = dnext_h * (1 - next_h ** 2)
+    dx = dtanh.dot(Wx.T)
+    dWx = x.T.dot(dtanh)
+    dprev_h = dtanh.dot(Wh.T)
+    dWh = prev_h.T.dot(dtanh)
+    db = np.sum(dtanh, axis=0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -104,7 +110,12 @@ def rnn_forward(x, h0, Wx, Wh, b):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N, T, _ = x.shape
+    _, H = Wx.shape
+    h = np.zeros((N, T, H))
+    for t in range(T):
+        h[:, t, :], _ = rnn_step_forward(x[:, t, :], h0 if t == 0 else h[:, t - 1, :], Wx, Wh, b)
+    cache = (h, x, h0, Wx, Wh, b)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -140,7 +151,24 @@ def rnn_backward(dh, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    h, x, h0, Wx, Wh, b = cache
+    N, T, D = x.shape
+    dx = np.zeros_like(x)
+    dh0 = np.zeros_like(h0)
+    dWx = np.zeros_like(Wx)
+    dWh = np.zeros_like(Wh)
+    db = np.zeros_like(b)
+
+    for t in range(T - 1, -1, -1):
+        # next_h, x, prev_h, Wx, Wh = cache
+        dh0 += dh[:, t, :]
+        dx[:, t, :], dh0, dWx_, dWh_, db_ = rnn_step_backward(dh0,
+                                                              (h[:, t, :], x[:, t, :],
+                                                               h0 if t == 0 else h[:, t - 1, :], Wx,
+                                                               Wh))
+        dWx += dWx_
+        dWh += dWh_
+        db += db_
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -172,7 +200,8 @@ def word_embedding_forward(x, W):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = W[x, :]
+    cache = x, W
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -205,7 +234,9 @@ def word_embedding_backward(dout, cache):
     ##############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    x, W = cache
+    dW = np.zeros_like(W)
+    np.add.at(dW, x, dout)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ##############################################################################
@@ -390,10 +421,9 @@ def temporal_affine_forward(x, w, b):
     - out: Output data of shape (N, T, M)
     - cache: Values needed for the backward pass
     """
-    N, T, D = x.shape
-    M = b.shape[0]
-    out = x.reshape(N * T, D).dot(w).reshape(N, T, M) + b
-    cache = x, w, b, out
+
+    out = x.dot(w) + b
+    cache = x, w, b
     return out, cache
 
 
@@ -410,7 +440,7 @@ def temporal_affine_backward(dout, cache):
     - dw: Gradient of weights, of shape (D, M)
     - db: Gradient of biases, of shape (M,)
     """
-    x, w, b, out = cache
+    x, w, b = cache
     N, T, D = x.shape
     M = b.shape[0]
 
