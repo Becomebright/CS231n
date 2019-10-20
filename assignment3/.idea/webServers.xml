@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="4bcbe4b7-c13e-44ae-b067-ea94e1f7b572" name="geek" url="http://bob.geeekvr.com">
+        <fileTransfer host="bob.geeekvr.com" port="8033" accessType="SFTP">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="8033" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
